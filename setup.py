@@ -28,7 +28,7 @@ setup(
     platforms='any',
     install_requires=[
         'Flask',
-        'transaction',
+        'flask-transaction',
         'pytest',
         'mariadb'
     ],
