@@ -30,6 +30,7 @@ class MariadbDM:
         return self._cursor
 
     def new_cursor(self):
+        # print('creating cursor')
         if self._cursor:
             self.close_cursor()
         self._cursor = self.conn.cursor()
@@ -40,23 +41,25 @@ class MariadbDM:
             self._cursor.close()
 
     def abort(self,tx):
+        # print('abort in adapter')
         self.conn.rollback()
         self._cursor.close()
         #self.tpc_abort(tx)
 
     def commit(self,tx):
         # pass
+        # print('mariadb commit')
         x = 1
         pass
 
     def begin(self,tx):
-        print('begin mdm')
+        # print('begin mdm')
         tx.join(self)
         self.conn.tpc_begin(self._xid(tx))
 
     def tpc_begin(self,tx):
-        #self.conn.tpc_begin(self._xid(tx))
-        pass
+        if self._cursor and not self._cursor.closed:
+            self.close_cursor()
 
     def tpc_vote(self,tx):
         self.conn.tpc_prepare()
@@ -67,6 +70,7 @@ class MariadbDM:
         pass
 
     def tpc_abort(self,tx):
+        #print("tcp_abort")
         self.conn.tpc_rollback(self._xid(tx))
 
     def sortKey(self):
@@ -89,7 +93,7 @@ def get_maria_dm(name='mdm'):
             c = maria_pool.get_connection()
         except mariadb.PoolError as e:
             print('getting extra connection')
-            c = mariadb.connect(host="localhost", user="joerg", password="", db="foobar")
+            c = mariadb.connect(host="localhost", user="joerg", password="", db="foobar") #TODO
         dms[name] = MariadbDM(c,current_app.tm)
     return dms[name]
 
@@ -101,7 +105,7 @@ def init_mariadb_datamanger(app: Flask, **config):
         key = f'MARIADB_{suffix}'
         config.setdefault(suffix.lower(),app.config.get(key))
 
-    print(config)
+    # print(config)
     mp = mariadb.ConnectionPool(**config,
                                 pool_name="web-app",
                                 )

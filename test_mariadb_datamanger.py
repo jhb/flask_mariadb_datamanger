@@ -30,7 +30,6 @@ def action():
     fail = request.values.get('fail',None) is not None
     basedir = tempfile.TemporaryDirectory()
     basename = os.path.normpath(basedir.name)
-    print(basename)
     g.basedir = basedir
     file1 = FileDM(text1,os.path.join(basename,'foo1.txt'),current_app.tm)
     r = current_app.mariadb.cursor.execute('INSERT INTO test (id) values (5)')
@@ -53,7 +52,7 @@ def test_good_transaction():
     assert sorted(contents) == ['bar1.txt', 'foo1.txt']
     assert countid() == cid+1
 
-def test_good_transaction():
+def test_bad_transaction():
     basedir = None
     cid = countid()
     with app.test_client() as client:
@@ -66,3 +65,6 @@ def test_good_transaction():
     contents = os.listdir(os.path.normpath(basedir.name))
     assert sorted(contents) == []
     assert countid() == cid #nothing happened
+
+if __name__ == '__main__':
+    app.run(debug=1,port=5002)
